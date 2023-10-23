@@ -5,74 +5,53 @@
 #include <opencv2/opencv.hpp>
 
 constexpr double MY_PI = 3.1415926;
-inline double DEG2RAD(double deg) {return deg * MY_PI/180;}
 
-// M: rotate（还有translation、scale）
-Eigen::Matrix4f get_model_matrix(char axis, float rotation_angle)
-{
-    Eigen::Matrix4f model = Eigen::Matrix4f::Identity();
-
-    // TODO: Implement this function
-    // Create the model matrix for rotating the triangle around the Z axis.
-    // Then return it.
-    Eigen::Matrix4f rotate;
-
-    double rad = DEG2RAD(rotation_angle);
-    if(axis == 'x')
-    {
-        rotate << 1, 0, 0, 0,
-                  0, cos(rad), -sin(rad), 0,
-                  0, sin(rad), cos(rad), 0,
-                  0, 0, 0, 1;
-    }
-    else if(axis == 'y')
-    {
-        rotate << cos(rad), 0, sin(rad), 0,
-                  0, 1, 0, 0,
-                  -sin(rad), 0, cos(rad), 0,
-                  0, 0, 0, 1;
-    }
-    else if(axis == 'z')
-    {
-        rotate << cos(rad), -sin(rad), 0, 0,
-                  sin(rad), cos(rad), 0, 0,
-                  0, 0, 1, 0,
-                  0, 0, 0, 1;
-    }
-    else
-    {
-        std::cout << "Invalid axis!" << std::endl;
-    }
-
-    model = rotate * model;
-
-    return model;
-}
-
-// V: 平移到摄像机坐标系
 Eigen::Matrix4f get_view_matrix(Eigen::Vector3f eye_pos)
 {
     Eigen::Matrix4f view = Eigen::Matrix4f::Identity();
 
     Eigen::Matrix4f translate;
-    translate << 1, 0, 0, -eye_pos[0],
-                 0, 1, 0, -eye_pos[1],
-                 0, 0, 1, -eye_pos[2],
-                 0, 0, 0, 1;
+    translate << 1, 0, 0, -eye_pos[0], 0, 1, 0, -eye_pos[1], 0, 0, 1,
+        -eye_pos[2], 0, 0, 0, 1;
 
     view = translate * view;
 
     return view;
 }
 
-// P: 透视投影
-Eigen::Matrix4f get_projection_matrix(float eye_fov, float aspect_ratio, float zNear, float zFar)
+Eigen::Matrix4f get_model_matrix(float rotation_angle)
 {
+    Eigen::Matrix4f model = Eigen::Matrix4f::Identity();
+
+    // TODO: Implement this function
+    // Create the model matrix for rotating the triangle around the Z axis.
+    // Then return it.
+
+    Eigen::Matrix4f rotate;
+
+    double rad = rotation_angle * MY_PI / 180;
+    rotate << cos(rad), -sin(rad), 0, 0,
+            sin(rad), cos(rad), 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, 1;
+
+
+    model = rotate * model;
+
+    return model;
+}
+
+Eigen::Matrix4f get_projection_matrix(float eye_fov, float aspect_ratio,
+                                      float zNear, float zFar)
+{
+    // Students will implement this function
+
     Eigen::Matrix4f projection = Eigen::Matrix4f::Identity();
 
     // TODO: Implement this function
     // Create the projection matrix for the given parameters.
     // Then return it.
+
     float cot_fov = 1.0f / tanf(eye_fov / 2.0f);
     projection(0, 0) = cot_fov / aspect_ratio;
     projection(1, 1) = cot_fov;
@@ -86,7 +65,6 @@ Eigen::Matrix4f get_projection_matrix(float eye_fov, float aspect_ratio, float z
 
 int main(int argc, const char** argv)
 {
-    char axis = 'z';
     float angle = 0;
     bool command_line = false;
     std::string filename = "output.png";
@@ -101,11 +79,12 @@ int main(int argc, const char** argv)
             return 0;
     }
 
-    // rasterizer对象
     rst::rasterizer r(700, 700);
 
     Eigen::Vector3f eye_pos = {0, 0, 5};
+
     std::vector<Eigen::Vector3f> pos{{2, 0, -2}, {0, 2, -2}, {-2, 0, -2}};
+
     std::vector<Eigen::Vector3i> ind{{0, 1, 2}};
 
     auto pos_id = r.load_positions(pos);
@@ -117,7 +96,7 @@ int main(int argc, const char** argv)
     if (command_line) {
         r.clear(rst::Buffers::Color | rst::Buffers::Depth);
 
-        r.set_model(get_model_matrix(axis, angle));
+        r.set_model(get_model_matrix(angle));
         r.set_view(get_view_matrix(eye_pos));
         r.set_projection(get_projection_matrix(45, 1, 0.1, 50));
 
@@ -131,18 +110,14 @@ int main(int argc, const char** argv)
     }
 
     while (key != 27) {
-        // 清空颜色缓冲区和深度缓冲区
         r.clear(rst::Buffers::Color | rst::Buffers::Depth);
 
-        // 设置MVP矩阵
-        r.set_model(get_model_matrix(axis, angle));
+        r.set_model(get_model_matrix(angle));
         r.set_view(get_view_matrix(eye_pos));
         r.set_projection(get_projection_matrix(45, 1, 0.1, 50));
 
-        // 绘制三角形
         r.draw(pos_id, ind_id, rst::Primitive::Triangle);
 
-        // 显示图像
         cv::Mat image(700, 700, CV_32FC3, r.frame_buffer().data());
         image.convertTo(image, CV_8UC3, 1.0f);
         cv::imshow("image", image);
@@ -151,30 +126,11 @@ int main(int argc, const char** argv)
         std::cout << "frame count: " << frame_count++ << '\n';
 
         if (key == 'a') {
-            axis = 'z';
             angle += 10;
         }
         else if (key == 'd') {
-            axis = 'z';
             angle -= 10;
         }
-        else if(key == 'q') {
-            axis = 'x';
-            angle += 10;
-        }
-        else if(key == 'e') {
-            axis = 'x';
-            angle -= 10;
-        }
-        else if(key == 'z') {
-            axis = 'y';
-            angle += 10;
-        }
-        else if(key == 'c') {
-            axis = 'y';
-            angle -= 10;
-        }
-
     }
 
     return 0;

@@ -75,8 +75,8 @@ class rasterizer
     Eigen::Matrix4f view;
     Eigen::Matrix4f projection;
 
-    std::map<int, std::vector<Eigen::Vector3f> > pos_buf;
-    std::map<int, std::vector<Eigen::Vector3i> > ind_buf;
+    std::map<int, std::vector<Eigen::Vector3f>> pos_buf;
+    std::map<int, std::vector<Eigen::Vector3i>> ind_buf;
 
     std::vector<Eigen::Vector3f> frame_buf;
     std::vector<float> depth_buf;

@@ -43,6 +43,7 @@ auto to_vec4(const Eigen::Vector3f& v3, float w = 1.0f)
 static bool insideTriangle(int x, int y, const Vector3f* _v)
 {   
     // TODO : Implement this function to check if the point (x, y) is inside the triangle represented by _v[0], _v[1], _v[2]
+
     Vector3f v[3];
     Vector3f w[3];
 
@@ -127,13 +128,13 @@ void rst::rasterizer::rasterize_triangle(const Triangle& t) {
     auto v = t.toVector4();
     
     // TODO : Find out the bounding box of current triangle.
+    // iterate through the pixel and find if the current pixel is inside the triangle
 
     int x_min = std::max(0, std::min({(int)v[0].x(), (int)v[1].x(), (int)v[2].x()}));
     int x_max = std::min(width-1, std::max({(int)v[0].x(), (int)v[1].x(), (int)v[2].x()}));
     int y_min = std::max(0, std::min({(int)v[0].y(), (int)v[1].y(), (int)v[2].y()}));
     int y_max = std::min(height-1, std::max({(int)v[0].y(), (int)v[1].y(), (int)v[2].y()}));
 
-    // iterate through the pixel and find if the current pixel is inside the triangle
     // If so, use the following code to get the interpolated z value.
     //auto[alpha, beta, gamma] = computeBarycentric2D(x, y, t.v);
     //float w_reciprocal = 1.0/(alpha / v[0].w() + beta / v[1].w() + gamma / v[2].w());
@@ -141,7 +142,7 @@ void rst::rasterizer::rasterize_triangle(const Triangle& t) {
     //z_interpolated *= w_reciprocal;
 
     // TODO : set the current pixel (use the set_pixel function) to the color of the triangle (use getColor function) if it should be painted.
-    
+
     for (int x = x_min; x <= x_max; x++) {
         for (int y = y_min; y <= y_max; y++) {
             if (insideTriangle(x, y, t.v)) {
@@ -157,8 +158,6 @@ void rst::rasterizer::rasterize_triangle(const Triangle& t) {
             }
         }
     }
-
-    
 }
 
 void rst::rasterizer::set_model(const Eigen::Matrix4f& m)
@@ -176,7 +175,6 @@ void rst::rasterizer::set_projection(const Eigen::Matrix4f& p)
     projection = p;
 }
 
-// 清空帧缓冲区和深度缓冲区
 void rst::rasterizer::clear(rst::Buffers buff)
 {
     if ((buff & rst::Buffers::Color) == rst::Buffers::Color)

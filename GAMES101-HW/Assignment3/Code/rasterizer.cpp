@@ -257,8 +257,29 @@ static Eigen::Vector2f interpolate(float alpha, float beta, float gamma, const E
 }
 
 //Screen space rasterization
-void rst::rasterizer::rasterize_triangle(const Triangle &t, const std::array<Eigen::Vector3f, 3> &view_pos) {
-    // TODO : Find out the bounding box of current triangle.
+void rst::rasterizer::rasterize_triangle(const Triangle& t, const std::array<Eigen::Vector3f, 3>& view_pos) 
+{
+    // TODO: From your HW3, get the triangle rasterization code.
+    // TODO: Inside your rasterization loop:
+    //    * v[i].w() is the vertex view space depth value z.
+    //    * Z is interpolated view space depth for the current pixel
+    //    * zp is depth between zNear and zFar, used for z-buffer
+
+    // float Z = 1.0 / (alpha / v[0].w() + beta / v[1].w() + gamma / v[2].w());
+    // float zp = alpha * v[0].z() / v[0].w() + beta * v[1].z() / v[1].w() + gamma * v[2].z() / v[2].w();
+    // zp *= Z;
+
+    // TODO: Interpolate the attributes:
+    // auto interpolated_color
+    // auto interpolated_normal
+    // auto interpolated_texcoords
+    // auto interpolated_shadingcoords
+
+    // Use: fragment_shader_payload payload( interpolated_color, interpolated_normal.normalized(), interpolated_texcoords, texture ? &*texture : nullptr);
+    // Use: payload.view_pos = interpolated_shadingcoords;
+    // Use: Instead of passing the triangle's color directly to the frame buffer, pass the color to the shaders first to get the final color;
+    // Use: auto pixel_color = fragment_shader(payload);
+
     float aabb_minx = 0;
     float aabb_miny = 0;
     float aabb_maxx = 0;
@@ -285,10 +306,6 @@ void rst::rasterizer::rasterize_triangle(const Triangle &t, const std::array<Eig
 
             if (!insideTriangle(x, y, t.v))
                 continue;
-            // TODO: Inside your rasterization loop:
-            //    * v[i].w() is the vertex view space depth value z.
-            //    * Z is interpolated view space depth for the current pixel
-            //    * zp is depth between zNear and zFar, used for z-buffer
             auto [alpha, beta, gamma] = computeBarycentric2D(x, y, t.v);
 
             float Z = 1.0 / (alpha / v[0].w() + beta / v[1].w() + gamma / v[2].w());
@@ -300,12 +317,6 @@ void rst::rasterizer::rasterize_triangle(const Triangle &t, const std::array<Eig
                 continue;
 
             depth_buf[buf_index] = zp;
-
-            // TODO: Interpolate the attributes:
-            // auto interpolated_color
-            // auto interpolated_normal
-            // auto interpolated_texcoords
-            // auto interpolated_shadingcoords
 
             auto interpolated_color = interpolate(alpha, beta, gamma, t.color[0], t.color[1], t.color[2], 1);
             auto interpolated_normal = interpolate(alpha, beta, gamma, t.normal[0], t.normal[1], t.normal[2], 1);
@@ -320,11 +331,6 @@ void rst::rasterizer::rasterize_triangle(const Triangle &t, const std::array<Eig
             set_pixel(Vector2i(x, y), pixel_color);
         }
     }
-
-    // Use: fragment_shader_payload payload( interpolated_color, interpolated_normal.normalized(),
-    // interpolated_texcoords, texture ? &*texture : nullptr); Use: payload.view_pos = interpolated_shadingcoords; Use:
-    // Instead of passing the triangle's color directly to the frame buffer, pass the color to the shaders first to get
-    // the final color; Use: auto pixel_color = fragment_shader(payload);
 }
 
 void rst::rasterizer::set_model(const Eigen::Matrix4f& m)

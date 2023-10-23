@@ -29,12 +29,6 @@ int main(){
     std::cout << "Example of scalar multiply \n";
     std::cout << v * 3.0f << std::endl;
     std::cout << 2.0f * v << std::endl;
-    // vector dot multiply
-    std::cout << "Example of dot multiply \n";
-    std::cout << v.dot(w) << std::endl;
-    // vector cross multiply
-    std::cout << "Example of cross multiply \n";
-    std::cout << v.cross(w) << std::endl;
 
     // Example of matrix
     std::cout << "Example of matrix \n";
@@ -46,33 +40,9 @@ int main(){
     std::cout << "Example of output \n";
     std::cout << i << std::endl;
     // matrix add i + j
-    std::cout << "Example of add \n";
-    std::cout << i + j << std::endl;
     // matrix scalar multiply i * 2.0
-    std::cout << "Example of scalar multiply \n";
-    std::cout << i * 2.0 << std::endl;
     // matrix multiply i * j
-    std::cout << "Example of multiply \n";
-    std::cout << i * j << std::endl;
     // matrix multiply vector i * v
-    std::cout << "Example of matrix multiply vector \n";
-    std::cout << i * v << std::endl;
-
-    // 给定一个点 P =(2,1), 将该点绕原点先逆时针旋转 45◦，再平移 (1,2), 计算出 变换后点的坐标(要求用齐次坐标进行计算)。
-    std::cout << "Example of transform \n";
-    Eigen::Vector3f p(2.0f,1.0f,1.0f);
-    Eigen::Matrix3f r;
-    r << std::cos(45.0/180.0*acos(-1)), -std::sin(45.0/180.0*acos(-1)), 0,
-         std::sin(45.0/180.0*acos(-1)), std::cos(45.0/180.0*acos(-1)), 0,
-         0, 0, 1;
-    Eigen::Matrix3f t;
-    t << 1, 0, 1,
-         0, 1, 2,
-         0, 0, 1;
-    std::cout << "The point before transform is: \n";
-    std::cout << p << std::endl;
-    std::cout << "The point after transform is: \n";
-    std::cout << t * r * p << std::endl;
 
     return 0;
 }
