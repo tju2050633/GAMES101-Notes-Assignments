@@ -1,9 +1,17 @@
-#include <chrono>
 #include <iostream>
+#include <vector>
 #include <opencv2/opencv.hpp>
 
-std::vector<cv::Point2f> control_points;
+std::vector<cv::Point2f> control_points; // 控制点数组
 
+/**
+ * 鼠标事件处理函数
+ * @param event 鼠标事件类型
+ * @param x 鼠标事件发生的 x 坐标
+ * @param y 鼠标事件发生的 y 坐标
+ * @param flags 鼠标事件的标志
+ * @param userdata 用户数据指针
+ */
 void mouse_handler(int event, int x, int y, int flags, void *userdata) 
 {
     if (event == cv::EVENT_LBUTTONDOWN && control_points.size() < 4) 
@@ -14,6 +22,11 @@ void mouse_handler(int event, int x, int y, int flags, void *userdata)
     }     
 }
 
+/**
+ * 直接计算的 Bezier 算法
+ * @param points 控制点数组
+ * @param window OpenCV 窗口
+ */
 void naive_bezier(const std::vector<cv::Point2f> &points, cv::Mat &window) 
 {
     auto &p_0 = points[0];
@@ -30,6 +43,12 @@ void naive_bezier(const std::vector<cv::Point2f> &points, cv::Mat &window)
     }
 }
 
+/**
+ * 递归计算 Bezier 曲线上的点
+ * @param control_points 控制点数组
+ * @param t 参数 t
+ * @return 计算得到的点
+ */
 cv::Point2f recursive_bezier(const std::vector<cv::Point2f> &control_points, float t) 
 {
     // TODO: Implement de Casteljau's algorithm
@@ -49,6 +68,11 @@ cv::Point2f recursive_bezier(const std::vector<cv::Point2f> &control_points, flo
     return recursive_bezier(mid_points, t);
 }
 
+/**
+ * Bezier 算法
+ * @param control_points 控制点数组
+ * @param window OpenCV 窗口
+ */
 void bezier(const std::vector<cv::Point2f> &control_points, cv::Mat &window) 
 {
     // TODO: Iterate through all t = 0 to t = 1 with small steps, and call de Casteljau's 
@@ -99,5 +123,5 @@ int main()
         key = cv::waitKey(20);
     }
 
-return 0;
+    return 0;
 }

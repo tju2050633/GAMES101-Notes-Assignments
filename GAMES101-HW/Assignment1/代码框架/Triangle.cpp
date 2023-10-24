@@ -7,6 +7,9 @@
 #include <array>
 #include <stdexcept>
 
+/**
+ * @brief 构造函数，初始化三角形的顶点坐标、颜色和纹理坐标。
+ */
 Triangle::Triangle()
 {
     v[0] << 0, 0, 0;
@@ -22,10 +25,34 @@ Triangle::Triangle()
     tex_coords[2] << 0.0, 0.0;
 }
 
-void Triangle::setVertex(int ind, Eigen::Vector3f ver) { v[ind] = ver; }
+/**
+ * @brief 设置第i个顶点的坐标。
+ * @param ind 要设置的顶点的索引。
+ * @param ver 新的顶点坐标。
+ */
+void Triangle::setVertex(int ind, Eigen::Vector3f ver)
+{
+    v[ind] = ver;
+}
 
-void Triangle::setNormal(int ind, Vector3f n) { normal[ind] = n; }
+/**
+ * @brief 设置第i个顶点的法向量。
+ * @param ind 要设置的顶点的索引。
+ * @param n 新的法向量。
+ */
+void Triangle::setNormal(int ind, Vector3f n)
+{
+    normal[ind] = n;
+}
 
+/**
+ * @brief 设置第i个顶点的颜色。
+ * @param ind 要设置的顶点的索引。
+ * @param r 颜色的红色分量。
+ * @param g 颜色的绿色分量。
+ * @param b 颜色的蓝色分量。
+ * @throw std::runtime_error 如果颜色分量不在0到255之间，则抛出异常。
+ */
 void Triangle::setColor(int ind, float r, float g, float b)
 {
     if ((r < 0.0) || (r > 255.) || (g < 0.0) || (g > 255.) || (b < 0.0) ||
@@ -36,11 +63,22 @@ void Triangle::setColor(int ind, float r, float g, float b)
     color[ind] = Vector3f((float)r / 255., (float)g / 255., (float)b / 255.);
     return;
 }
+
+/**
+ * @brief 设置第i个顶点的纹理坐标。
+ * @param ind 要设置的顶点的索引。
+ * @param s 纹理坐标的u分量。
+ * @param t 纹理坐标的v分量。
+ */
 void Triangle::setTexCoord(int ind, float s, float t)
 {
     tex_coords[ind] = Vector2f(s, t);
 }
 
+/**
+ * @brief 将三角形转换为四维向量数组。
+ * @return 一个包含三个四维向量的数组，每个向量表示一个顶点。
+ */
 std::array<Vector4f, 3> Triangle::toVector4() const
 {
     std::array<Vector4f, 3> res;
