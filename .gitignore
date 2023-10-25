@@ -1,7 +1,6 @@
 .DS_Store
 
 GAMES101-课件/
-reference笔记/
 
 GAMES101-HW/*
 !GAMES101-HW/Assignment0/
@@ -10,10 +9,12 @@ GAMES101-HW/*
 !GAMES101-HW/Assignment3/
 !GAMES101-HW/Assignment4/
 !GAMES101-HW/Assignment5/
+!GAMES101-HW/Assignment6/
+!GAMES101-HW/Assignment7/
+!GAMES101-HW/Assignment8/
 
 GAMES101-HW/.vscode/
 GAMES101-HW/build/
-GAMES101-HW/reference/
 GAMES101-HW/CMakeLists.txt/
 
 GAMES101-HW/*/bin/
