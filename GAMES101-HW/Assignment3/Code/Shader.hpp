@@ -8,6 +8,7 @@
 #include "Texture.hpp"
 
 
+// 片段着色器数据结构
 struct fragment_shader_payload
 {
     fragment_shader_payload()
@@ -19,16 +20,17 @@ struct fragment_shader_payload
          color(col), normal(nor), tex_coords(tc), texture(tex) {}
 
 
-    Eigen::Vector3f view_pos;
-    Eigen::Vector3f color;
-    Eigen::Vector3f normal;
-    Eigen::Vector2f tex_coords;
-    Texture* texture;
+    Eigen::Vector3f view_pos;   // 视点位置
+    Eigen::Vector3f color;      // 片段颜色
+    Eigen::Vector3f normal;     // 片段法向量
+    Eigen::Vector2f tex_coords; // 片段纹理坐标
+    Texture* texture;           // 片段纹理指针
 };
 
+// 顶点着色器数据结构
 struct vertex_shader_payload
 {
-    Eigen::Vector3f position;
+    Eigen::Vector3f position;   // 顶点位置
 };
 
 #endif //RASTERIZER_SHADER_H

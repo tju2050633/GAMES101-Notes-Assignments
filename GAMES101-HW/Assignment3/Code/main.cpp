@@ -8,6 +8,7 @@
 #include "Texture.hpp"
 #include "OBJ_Loader.h"
 
+// 视图矩阵
 Eigen::Matrix4f get_view_matrix(Eigen::Vector3f eye_pos)
 {
     Eigen::Matrix4f view = Eigen::Matrix4f::Identity();
@@ -23,6 +24,7 @@ Eigen::Matrix4f get_view_matrix(Eigen::Vector3f eye_pos)
     return view;
 }
 
+// 模型矩阵：绕y轴旋转angle角度，xyz放大2.5倍，平移0
 Eigen::Matrix4f get_model_matrix(float angle)
 {
     Eigen::Matrix4f rotation;
@@ -47,6 +49,7 @@ Eigen::Matrix4f get_model_matrix(float angle)
     return translate * rotation * scale;
 }
 
+// 投影矩阵
 Eigen::Matrix4f get_projection_matrix(float eye_fov, float aspect_ratio, float zNear, float zFar)
 {
     // TODO: Use the same projection matrix from the previous assignments
@@ -62,29 +65,34 @@ Eigen::Matrix4f get_projection_matrix(float eye_fov, float aspect_ratio, float z
     return projection;
 }
 
+// 顶点着色器函数，返回顶点位置
 Eigen::Vector3f vertex_shader(const vertex_shader_payload& payload)
 {
     return payload.position;
 }
 
+// 法向量片段着色器函数，返回法向量颜色
 Eigen::Vector3f normal_fragment_shader(const fragment_shader_payload& payload)
 {
+    // 将法向量转换为颜色值
     Eigen::Vector3f return_color = (payload.normal.head<3>().normalized() + Eigen::Vector3f(1.0f, 1.0f, 1.0f)) / 2.f;
     Eigen::Vector3f result;
     result << return_color.x() * 255, return_color.y() * 255, return_color.z() * 255;
     return result;
 }
 
+// 计算向量在给定轴上的反射向量
 static Eigen::Vector3f reflect(const Eigen::Vector3f& vec, const Eigen::Vector3f& axis)
 {
     auto costheta = vec.dot(axis);
     return (2 * costheta * axis - vec).normalized();
 }
 
+// 光源结构体，包含位置和强度
 struct light
 {
-    Eigen::Vector3f position;
-    Eigen::Vector3f intensity;
+    Eigen::Vector3f position;   // 光源位置
+    Eigen::Vector3f intensity;  // 光源强度
 };
 
 Eigen::Vector3f texture_fragment_shader(const fragment_shader_payload& payload)
@@ -271,7 +279,6 @@ Eigen::Vector3f displacement_fragment_shader(const fragment_shader_payload& payl
 
     return result_color * 255.f;
 }
-
 
 Eigen::Vector3f bump_fragment_shader(const fragment_shader_payload& payload)
 {

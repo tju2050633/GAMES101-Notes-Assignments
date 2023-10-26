@@ -8,6 +8,10 @@
 #include <math.h>
 
 
+///////////////////////////////
+//          加载缓存
+///////////////////////////////
+
 rst::pos_buf_id rst::rasterizer::load_positions(const std::vector<Eigen::Vector3f> &positions)
 {
     auto id = get_next_id();
@@ -149,6 +153,7 @@ auto to_vec4(const Eigen::Vector3f& v3, float w = 1.0f)
     return Vector4f(v3.x(), v3.y(), v3.z(), w);
 }
 
+// 判定点是否在三角形内部
 static bool insideTriangle(int x, int y, const Vector4f* _v){
     Vector3f v[3];
     for(int i=0;i<3;i++)
@@ -163,6 +168,7 @@ static bool insideTriangle(int x, int y, const Vector4f* _v){
     return false;
 }
 
+// 计算点的重心坐标
 static std::tuple<float, float, float> computeBarycentric2D(float x, float y, const Vector4f* v){
     float c1 = (x*(v[1].y() - v[2].y()) + (v[2].x() - v[1].x())*y + v[1].x()*v[2].y() - v[2].x()*v[1].y()) / (v[0].x()*(v[1].y() - v[2].y()) + (v[2].x() - v[1].x())*v[0].y() + v[1].x()*v[2].y() - v[2].x()*v[1].y());
     float c2 = (x*(v[2].y() - v[0].y()) + (v[0].x() - v[2].x())*y + v[2].x()*v[0].y() - v[0].x()*v[2].y()) / (v[1].x()*(v[2].y() - v[0].y()) + (v[0].x() - v[2].x())*v[1].y() + v[2].x()*v[0].y() - v[0].x()*v[2].y());
@@ -170,6 +176,7 @@ static std::tuple<float, float, float> computeBarycentric2D(float x, float y, co
     return {c1,c2,c3};
 }
 
+// 绘制三角形
 void rst::rasterizer::draw(std::vector<Triangle *> &TriangleList) {
 
     float f1 = (50 - 0.1) / 2.0;
@@ -240,11 +247,13 @@ void rst::rasterizer::draw(std::vector<Triangle *> &TriangleList) {
     }
 }
 
+// 三维向量插值函数，用于计算三角形内部点的位置、颜色和法向量
 static Eigen::Vector3f interpolate(float alpha, float beta, float gamma, const Eigen::Vector3f& vert1, const Eigen::Vector3f& vert2, const Eigen::Vector3f& vert3, float weight)
 {
     return (alpha * vert1 + beta * vert2 + gamma * vert3) / weight;
 }
 
+// 二维向量插值函数，用于计算三角形内部点的纹理坐标
 static Eigen::Vector2f interpolate(float alpha, float beta, float gamma, const Eigen::Vector2f& vert1, const Eigen::Vector2f& vert2, const Eigen::Vector2f& vert3, float weight)
 {
     auto u = (alpha * vert1[0] + beta * vert2[0] + gamma * vert3[0]);
@@ -256,7 +265,7 @@ static Eigen::Vector2f interpolate(float alpha, float beta, float gamma, const E
     return Eigen::Vector2f(u, v);
 }
 
-//Screen space rasterization
+// 屏幕空间光栅化函数，将三角形渲染到屏幕上
 void rst::rasterizer::rasterize_triangle(const Triangle& t, const std::array<Eigen::Vector3f, 3>& view_pos) 
 {
     // TODO: From your HW3, get the triangle rasterization code.
@@ -280,6 +289,7 @@ void rst::rasterizer::rasterize_triangle(const Triangle& t, const std::array<Eig
     // Use: Instead of passing the triangle's color directly to the frame buffer, pass the color to the shaders first to get the final color;
     // Use: auto pixel_color = fragment_shader(payload);
 
+    // 计算三角形的包围盒
     float aabb_minx = 0;
     float aabb_miny = 0;
     float aabb_maxx = 0;
@@ -299,39 +309,54 @@ void rst::rasterizer::rasterize_triangle(const Triangle& t, const std::array<Eig
         aabb_maxy = p.y() > aabb_maxy ? p.y() : aabb_maxy;
     }
 
-    // iterate through the pixel and find if the current pixel is inside the triangle
+    // 遍历包围盒内的像素，判断像素是否在三角形内部
     auto v = t.v;
     for (int x = (int)aabb_minx; x < aabb_maxx; x++) {
         for (int y = (int)aabb_miny; y < aabb_maxy; y++) {
 
             if (!insideTriangle(x, y, t.v))
                 continue;
+
+            // 计算像素的重心坐标
             auto [alpha, beta, gamma] = computeBarycentric2D(x, y, t.v);
 
+            // 计算像素的深度值
             float Z = 1.0 / (alpha / v[0].w() + beta / v[1].w() + gamma / v[2].w());
             float zp = alpha * v[0].z() / v[0].w() + beta * v[1].z() / v[1].w() + gamma * v[2].z() / v[2].w();
             zp *= Z;
 
+            // 判断像素是否在深度缓冲区内
             int buf_index = get_index(x, y);
             if (zp >= depth_buf[buf_index])
                 continue;
 
+            // 更新深度缓冲区
             depth_buf[buf_index] = zp;
 
+            // 插值计算像素的颜色、法向量、纹理坐标和视点位置
             auto interpolated_color = interpolate(alpha, beta, gamma, t.color[0], t.color[1], t.color[2], 1);
             auto interpolated_normal = interpolate(alpha, beta, gamma, t.normal[0], t.normal[1], t.normal[2], 1);
             auto interpolated_texcoords =
                 interpolate(alpha, beta, gamma, t.tex_coords[0], t.tex_coords[1], t.tex_coords[2], 1);
             auto interpolated_viewpos = interpolate(alpha, beta, gamma, view_pos[0], view_pos[1], view_pos[2], 1);
 
+            // 构造片段着色器的输入参数
             fragment_shader_payload payload(interpolated_color, interpolated_normal.normalized(),
                                             interpolated_texcoords, texture ? &*texture : nullptr);
             payload.view_pos = interpolated_viewpos;
+
+            // 调用片段着色器计算像素的最终颜色
             auto pixel_color = fragment_shader(payload);
+
+            // 将像素颜色写入帧缓冲区
             set_pixel(Vector2i(x, y), pixel_color);
         }
     }
 }
+
+///////////////////////////////
+//       设置变换矩阵
+///////////////////////////////
 
 void rst::rasterizer::set_model(const Eigen::Matrix4f& m)
 {
@@ -348,6 +373,7 @@ void rst::rasterizer::set_projection(const Eigen::Matrix4f& p)
     projection = p;
 }
 
+// 清空缓存
 void rst::rasterizer::clear(rst::Buffers buff)
 {
     if ((buff & rst::Buffers::Color) == rst::Buffers::Color)
@@ -360,6 +386,7 @@ void rst::rasterizer::clear(rst::Buffers buff)
     }
 }
 
+// 构造函数
 rst::rasterizer::rasterizer(int w, int h) : width(w), height(h)
 {
     frame_buf.resize(w * h);
@@ -368,25 +395,27 @@ rst::rasterizer::rasterizer(int w, int h) : width(w), height(h)
     texture = std::nullopt;
 }
 
+// 获取像素在帧缓冲区中的索引
 int rst::rasterizer::get_index(int x, int y)
 {
     return (height-y)*width + x;
 }
 
+// 将像素颜色写入帧缓冲区
 void rst::rasterizer::set_pixel(const Vector2i &point, const Eigen::Vector3f &color)
 {
-    //old index: auto ind = point.y() + point.x() * width;
     int ind = (height-point.y())*width + point.x();
     frame_buf[ind] = color;
 }
 
+// 设置顶点着色器函数
 void rst::rasterizer::set_vertex_shader(std::function<Eigen::Vector3f(vertex_shader_payload)> vert_shader)
 {
     vertex_shader = vert_shader;
 }
 
+// 设置片段着色器函数
 void rst::rasterizer::set_fragment_shader(std::function<Eigen::Vector3f(fragment_shader_payload)> frag_shader)
 {
     fragment_shader = frag_shader;
 }
-
